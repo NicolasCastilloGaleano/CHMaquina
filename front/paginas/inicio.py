@@ -18,20 +18,20 @@ class Inicio(tk.Tk):
         barra_menus = tk.Menu(self)
 
         # Menú Archivo
-        menu_archivo = tk.Menu(barra_menus, tearoff=False)
-        menu_archivo.add_command(label="Cargar", accelerator="Ctrl+N", command=lambda: self.cargar_archivo())
+        self.menu_archivo = tk.Menu(barra_menus, tearoff=False)
+        self.menu_archivo.add_command(label="Cargar", accelerator="Ctrl+N", command=lambda: self.cargar_archivo())
         self.bind("<Control-n>", lambda event: self.cargar_archivo())
-        menu_archivo.add_separator()
-        menu_archivo.add_command(label="Salir", accelerator="Ctrl+Q", command=self.salir)
-        barra_menus.add_cascade(menu=menu_archivo, label="Archivo")
+        self.menu_archivo.add_separator()
+        self.menu_archivo.add_command(label="Salir", accelerator="Ctrl+Q", command=self.salir)
+        barra_menus.add_cascade(menu=self.menu_archivo, label="Archivo")
 
         # Menú Ejecutar
-        menu_ejecutar = tk.Menu(barra_menus, tearoff=False)
-        menu_ejecutar.add_command(label="Ejecutar", command=self.ejecutar)
-        menu_ejecutar.add_command(label="Mostrar Memoria", command=self.mostrar_memoria)
-        menu_ejecutar.add_command(label="Pausa", command=self.pausa)
-        menu_ejecutar.add_command(label="Paso a Paso", command=self.paso_a_paso)
-        barra_menus.add_cascade(menu=menu_ejecutar, label="Ejecutar")
+        self.menu_ejecutar = tk.Menu(barra_menus, tearoff=False)
+        self.menu_ejecutar.add_command(label="Ejecutar", command=self.ejecutar)
+        self.menu_ejecutar.add_command(label="Mostrar Memoria", command=self.mostrar_memoria)
+        self.menu_ejecutar.add_command(label="Pausa", command=self.pausa)
+        self.menu_ejecutar.add_command(label="Paso a Paso", command=self.paso_a_paso)
+        barra_menus.add_cascade(menu=self.menu_ejecutar, label="Ejecutar")
 
         # Asociar la barra de menús a la ventana
         self.config(menu=barra_menus)
@@ -197,6 +197,11 @@ class Inicio(tk.Tk):
         self.archivos_listbox.yview(*args)    
         self.archivo_seleccionado_listbox.yview(*args)
         
+    def actualizar_proceso(self, instruccion):
+        self.acumulador_valor.config(text=str(self.procesador.acumulador))
+        self.instruccion_valor.config(text=str(instruccion))
+        
+        
     def actualizar_memoria(self):
         self.memoria_listbox.delete(0, "end")
         for idx, string in enumerate(self.procesador.memoria.memoria, start=0):
@@ -241,7 +246,9 @@ class Inicio(tk.Tk):
 
     def ejecutar(self):
         self.archivos_listbox.unbind("<<ListboxSelect>>")
+        self.menu_ejecutar.entryconfig("Ejecutar", state="disabled")
         self.procesador.ejecutar_archivo(self)
+        self.menu_ejecutar.entryconfig("Ejecutar", state="normal")
         self.archivos_listbox.bind("<<ListboxSelect>>", self.seleccionar_archivo)
 
     def mostrar_memoria(self):
@@ -252,3 +259,24 @@ class Inicio(tk.Tk):
 
     def paso_a_paso(self):
         print("Paso a paso...")
+
+    def ventana_valor_variable(self, variable:Variable):
+        ventana_leer_variable = tk.Toplevel()
+        ventana_leer_variable.title("Variable")
+        ancho_ventana_leer_variable = 300
+        alto_ventana_leer_variable = 150
+        x = (ventana_leer_variable.winfo_screenwidth() - ancho_ventana_leer_variable) // 2
+        y = (ventana_leer_variable.winfo_screenheight() - alto_ventana_leer_variable) // 2
+        ventana_leer_variable.geometry(f"{ancho_ventana_leer_variable}x{alto_ventana_leer_variable}+{x}+{y}")
+        ventana_leer_variable.protocol("WM_DELETE_WINDOW", lambda: None)
+        label = tk.Label(ventana_leer_variable, text= variable.nombre + " = ")
+        label.grid(column=0, row=0)
+        entry = tk.Entry(ventana_leer_variable)
+        entry.grid(column=1, row=0,pady=10)
+        def aceptar():
+            valor = entry.get()
+            if valor:
+                ventana_leer_variable.destroy()
+                variable.valor = valor
+        boton_aceptar = tk.Button(ventana_leer_variable, text="Aceptar", command=aceptar)
+        boton_aceptar.grid(column=0,row=1, columnspan=2,pady=5)

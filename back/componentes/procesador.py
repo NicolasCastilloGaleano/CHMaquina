@@ -1,7 +1,6 @@
 from .memoria import Memoria
 from .interprete import Interprete
 from .archivo import Archivo
-from front.paginas.inicio import Inicio
 
 
 class Procesador:
@@ -10,16 +9,15 @@ class Procesador:
         self.acumulador = 0
         self.Z = 9
         self.memoria = Memoria(self.Z)
-        self.interprete = Interprete(self.acumulador)
+        self.interprete = Interprete()
         self.archivos : list[Archivo] = []
         
     
     def revisar_archivo(self, archivo) -> bool:
         return self.interprete.revisar_archivo(archivo)
         
-    def ejecutar_archivo(self, window: Inicio):
-        return self.interprete.ejecutar_archivo()
-        pass
+    def ejecutar_archivo(self, ventana):
+        return self.interprete.ejecutar_archivo(ventana)
     
     
     

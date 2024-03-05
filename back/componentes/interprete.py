@@ -1,11 +1,10 @@
 import os
 import time
-from front.paginas.inicio import Inicio
+import math
 
 class Interprete:
-    def __init__(self,acumulador) -> None:
+    def __init__(self) -> None:
         self.comandos = ["cargue","almacene","nueva","lea","sume","reste","multiplique","divida","potencia","modulo","concatene","elimine","extraiga","Y","O","NO","muestre","imprima","retorne","vaya","vayasi","etiqueta","XXX"]
-        self.acumulador = acumulador
         pass
     
     def revisar_archivo(self, archivo) -> bool:
@@ -36,229 +35,393 @@ class Interprete:
     def revisar_instruccion(self,index,instruccion) -> bool:
         return self.opciones(index,instruccion,True)        
     
-    def ejecutar_archivo(self, window : Inicio):
-        archivo = window.archivo_seleccionado
-        for i in range(archivo.inicio,archivo.fin):
-            instruccion = window.procesador.memoria.memoria[i]
-            self.ejecutar_comando(window,archivo,instruccion)
-            time.sleep(1) 
-            pass
-        pass
+    def ejecutar_archivo(self, ventana):
+        self.ventana = ventana
+        self.termino = False
+        self.i = 0
+        try:
+            self.archivo = ventana.archivo_seleccionado
+            self.ventana.display_pantalla.config(text="Ejecutando "+ self.archivo.nombre)
+            for self.i in range(self.archivo.inicio,self.archivo.fin):
+                print(self.i)
+                # pasar el i como parametro parapoder hacer retornos en las instrucciones (vaya, vayasi)
+                instruccion = self.ventana.procesador.memoria.memoria[self.i]
+                self.ejecutar_comando(instruccion)
+                time.sleep(1)
+                if self.termino == True:
+                    text = self.ventana.display_pantalla.cget("text")
+                    self.ventana.display_pantalla.config(text= text + "\nEl programa finalizo correctamente")
+                    return
+        except Exception as e:
+            mensaje = e.args[0]
+            self.ventana.display_pantalla.config(text= "Error: " + str(mensaje))
     
-    def ejecutar_comando(self,window : Inicio,archivo,instruccion):
-        self.comandos.index()
-        pass
+    def ejecutar_comando(self,instruccion:str):
+        idx_comando = self.comandos.index(instruccion.split()[0])
+        self.opciones(idx_comando,instruccion,False )
     
     def opciones(self,index, instruccion, is_test):
         switch = {
-            0: self.cargue(instruccion,is_test),
-            1: self.almacene(instruccion,is_test),
-            2: self.nueva(instruccion,is_test),
-            3: self.lea(instruccion,is_test),
-            4: self.sume(instruccion,is_test),
-            5: self.reste(instruccion,is_test),
-            6: self.multiplique(instruccion,is_test),
-            7: self.divida(instruccion,is_test),
-            8: self.potencia(instruccion,is_test),
-            9: self.modulo(instruccion,is_test),
-            10: self.concatene(instruccion,is_test),
-            11: self.elimine(instruccion,is_test),
-            12: self.extraiga(instruccion,is_test),
-            13: self.Y(instruccion,is_test),
-            14: self.O(instruccion,is_test),
-            15: self.NO(instruccion,is_test),
-            16: self.muestre(instruccion,is_test),
-            17: self.imprima(instruccion,is_test),
-            18: self.retorne(instruccion,is_test),
-            19: self.vaya(instruccion,is_test),
-            20: self.vayasi(instruccion,is_test),
-            21: self.etiqueta(instruccion,is_test),
-            22: self.XXX(instruccion,is_test),
+            0: self.cargue,
+            1: self.almacene,
+            2: self.nueva,
+            3: self.lea,
+            4: self.sume,
+            5: self.reste,
+            6: self.multiplique,
+            7: self.divida,
+            8: self.potencia,
+            9: self.modulo,
+            10: self.concatene,
+            11: self.elimine,
+            12: self.extraiga,
+            13: self.Y,
+            14: self.O,
+            15: self.NO,
+            16: self.muestre,
+            17: self.imprima,
+            18: self.retorne,
+            19: self.vaya,
+            20: self.vayasi,
+            21: self.etiqueta,
+            22: self.XXX,
         }
-        return switch.get(index)
+        funcion = switch.get(index)
+        if funcion:
+            return funcion(instruccion, is_test)
     
-    def cargue(self,instruccion : str,is_test: bool):
-        if is_test:
+    def cargue(self,instruccion : str,is_test):
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador = variable.valor
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
 
     def almacene(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    variable.valor = self.ventana.procesador.acumulador
+                    self.ventana.procesador.memoria.memoria[variable.posicion_valor] = self.ventana.procesador.acumulador
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    self.ventana.actualizar_memoria()
+                    self.ventana.actualizar_variables()
+                    return
 
     def nueva(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
                 return False , "la instruccion solo puede tener tres operandos"
             else:
                 return True , ""
         else:
-            pass
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            return
 
     def lea(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        # print("se vino por aca")
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.ventana_valor_variable(variable)
+                    self.ventana.procesador.memoria.memoria[variable.posicion_valor] = variable.valor
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    self.ventana.actualizar_memoria()
+                    self.ventana.actualizar_variables()
+                    return
+            
 
     def sume(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador += float(variable.valor)
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
+            
 
     def reste(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador = float(self.ventana.procesador.acumulador) - float(variable.valor)
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
+            
 
     def multiplique(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador = float(self.ventana.procesador.acumulador) * float(variable.valor)
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
+            
 
     def divida(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    if float(variable.valor)!=0:
+                        self.ventana.procesador.acumulador /= float(variable.valor)
+                        self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    else:
+                        raise ZeroDivisionError("¡No se puede dividir entre cero!")
+                    return
+                    
 
     def potencia(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            self.ventana.procesador.acumulador = math.pow(float(self.ventana.procesador.acumulador),int(instruccion.split()[1]))
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            return
 
     def modulo(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    if variable.valor!=0:
+                        self.ventana.procesador.acumulador %= float(variable.valor)
+                        self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    else:
+                        raise ZeroDivisionError("¡No se puede dividir entre cero!")
+                    return
 
     def concatene(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador = str(self.ventana.procesador.acumulador) + str(variable.valor)
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
 
     def elimine(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    self.ventana.procesador.acumulador = str(self.ventana.procesador.acumulador).replace(str(variable.valor),"")
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
 
     def extraiga(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            self.ventana.procesador.acumulador = self.ventana.procesador.acumulador[int(instruccion.split()[1]):]
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            return
 
     def Y(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
                 return False , "la instruccion solo puede tener tres operandos"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    variable1=variable
+                if instruccion.split()[2] == variable.nombre:
+                    variable2=variable
+                if instruccion.split()[3] == variable.nombre:
+                    resultado = variable
+                if variable1 and variable2 and resultado:
+                    if int(variable1.valor) == 1 and int(variable2.valor) == 1:
+                        resultado.valor = 1
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 1
+                    else:
+                        resultado.valor = 0
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 0
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    self.ventana.actualizar_memoria()
+                    self.ventana.actualizar_variables()
+                    return
 
     def O(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
                 return False , "la instruccion solo puede tener tres operandos"
             else:
                 return True , ""
         else:
-            pass
-
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    variable1=variable
+                if instruccion.split()[2] == variable.nombre:
+                    variable2=variable
+                if instruccion.split()[3] == variable.nombre:
+                    resultado = variable
+                if variable1 and variable2 and resultado:
+                    if int(variable1.valor) == 1 or int(variable2.valor) == 1:
+                        resultado.valor = 1
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 1
+                    else:
+                        resultado.valor = 0
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 0
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    self.ventana.actualizar_memoria()
+                    self.ventana.actualizar_variables()
+                    return
     def NO(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
                 return False , "la instruccion solo puede tener dos operandos"
             else:
                 return True , ""
         else:
-            pass
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    variable1=variable
+                if instruccion.split()[2] == variable.nombre:
+                    resultado = variable
+                if variable1 and resultado:
+                    if int(variable1.valor) == 0:
+                        resultado.valor = 1
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 1
+                    else:
+                        resultado.valor = 0
+                        self.ventana.procesador.memoria.memoria[resultado.posicion_valor] = 0
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    self.ventana.actualizar_memoria()
+                    self.ventana.actualizar_variables()
+                    return
 
     def muestre(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            if instruccion.split()[1] == "acumulador":
+                text = self.ventana.display_pantalla.cget("text")
+                self.ventana.display_pantalla.config(text= text + "\nacumulador = " + str(self.ventana.procesador.acumulador))
+                self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                return
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    text = self.ventana.display_pantalla.cget("text")
+                    self.ventana.display_pantalla.config(text= text + "\n" + str(variable.nombre) + " = " + str(variable.valor))
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
 
     def imprima(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            if instruccion.split()[1] == "acumulador":
+                text = self.ventana.display_impresora.cget("text")
+                self.ventana.display_impresora.config(text= text + "\nacumulador = " + str(self.ventana.procesador.acumulador))
+                self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                return
+            for variable in self.archivo.variables:
+                if instruccion.split()[1] == variable.nombre:
+                    text = self.ventana.display_impresora.cget("text")
+                    self.ventana.display_impresora.config(text= text + "\n" + str(variable.nombre) + " = " + str(variable.valor))
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    return
 
     def retorne(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != (1 or 0):
                 return False , "la instruccion solo puede tener hasta un operando"
@@ -267,30 +430,46 @@ class Interprete:
             else:
                 return True , ""
         else:
-            pass
+            self.termino = True
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            
 
     def vaya(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
             else:
                 return True , ""
         else:
-            pass
+            for etiqueta in self.archivo.etiquetas:
+                if instruccion.split()[1] == etiqueta.nombre:
+                    self.i = etiqueta.apuntador
+                    self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
 
     def vayasi(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
                 return False , "la instruccion solo puede tener dos operandos"
             else:
                 return True , ""
         else:
-            pass
+            for etiqueta in self.archivo.etiquetas:
+                print(etiqueta.nombre, " - ", etiqueta.apuntador)
+                if instruccion.split()[1] == etiqueta.nombre and self.ventana.procesador.acumulador > 0:
+                    self.i=etiqueta.apuntador
+                if instruccion.split()[2] == etiqueta.nombre and self.ventana.procesador.acumulador<0:
+                    self.i=etiqueta.apuntador
+                self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                return
+                    
 
     def etiqueta(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
                 return False , "la instruccion solo puede tener dos operandos"
@@ -299,10 +478,12 @@ class Interprete:
             else:
                 return True , ""
         else:
-            pass
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            return
 
     def XXX(self,instruccion : str,is_test):
-        if is_test:
+        print(instruccion)
+        if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
                 return False , "la instruccion solo puede tener un operando"
