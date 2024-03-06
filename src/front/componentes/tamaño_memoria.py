@@ -1,6 +1,6 @@
 import tkinter as tk
-from front.paginas.inicio import Inicio
-from back.componentes.procesador import Procesador
+from src.front.paginas.inicio import Inicio
+from src.back.componentes.procesador import Procesador
 
 class TamañoMemoria:
     def __init__(self, procesador : Procesador):

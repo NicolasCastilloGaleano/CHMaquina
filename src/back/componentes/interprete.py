@@ -37,28 +37,33 @@ class Interprete:
     
     def ejecutar_archivo(self, ventana):
         self.ventana = ventana
-        self.termino = False
-        self.i = 0
+        self.termino_ejecucion = False
         try:
             self.archivo = ventana.archivo_seleccionado
+            self.i = self.archivo.inicio
             self.ventana.display_pantalla.config(text="Ejecutando "+ self.archivo.nombre)
-            for self.i in range(self.archivo.inicio,self.archivo.fin):
-                print(self.i)
-                # pasar el i como parametro parapoder hacer retornos en las instrucciones (vaya, vayasi)
+            while self.i < self.archivo.fin:
                 instruccion = self.ventana.procesador.memoria.memoria[self.i]
                 self.ejecutar_comando(instruccion)
                 time.sleep(1)
-                if self.termino == True:
+                self.i+=1
+                if self.termino_ejecucion == True:
                     text = self.ventana.display_pantalla.cget("text")
                     self.ventana.display_pantalla.config(text= text + "\nEl programa finalizo correctamente")
                     return
         except Exception as e:
             mensaje = e.args[0]
-            self.ventana.display_pantalla.config(text= "Error: " + str(mensaje))
+            text = self.ventana.display_pantalla.cget("text")
+            self.ventana.display_pantalla.config(text= text + "\nError: " + str(mensaje))
     
     def ejecutar_comando(self,instruccion:str):
-        idx_comando = self.comandos.index(instruccion.split()[0])
-        self.opciones(idx_comando,instruccion,False )
+        if instruccion.split()[0] in self.comandos:
+            idx_comando = self.comandos.index(instruccion.split()[0])
+            self.opciones(idx_comando,instruccion,False )
+        else:
+            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            
+        self.ventana.update()
     
     def opciones(self,index, instruccion, is_test):
         switch = {
@@ -91,7 +96,6 @@ class Interprete:
             return funcion(instruccion, is_test)
     
     def cargue(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -103,10 +107,10 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador = variable.valor
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
 
     def almacene(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -121,10 +125,10 @@ class Interprete:
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
+                    
                     return
 
     def nueva(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
@@ -136,8 +140,6 @@ class Interprete:
             return
 
     def lea(self,instruccion : str,is_test):
-        print(instruccion)
-        # print("se vino por aca")
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -147,16 +149,17 @@ class Interprete:
         else:
             for variable in self.archivo.variables:
                 if instruccion.split()[1] == variable.nombre:
-                    self.ventana.ventana_valor_variable(variable)
+                    self.termino_lectura = False
+                    self.termino_lectura = self.ventana.ventana_valor_variable(variable)
                     self.ventana.procesador.memoria.memoria[variable.posicion_valor] = variable.valor
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
+                    
                     return
             
 
     def sume(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -168,11 +171,11 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador += float(variable.valor)
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
             
 
     def reste(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -184,11 +187,11 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador = float(self.ventana.procesador.acumulador) - float(variable.valor)
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
             
 
     def multiplique(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -200,11 +203,11 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador = float(self.ventana.procesador.acumulador) * float(variable.valor)
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
             
 
     def divida(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -217,13 +220,13 @@ class Interprete:
                     if float(variable.valor)!=0:
                         self.ventana.procesador.acumulador /= float(variable.valor)
                         self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                        
                     else:
                         raise ZeroDivisionError("¡No se puede dividir entre cero!")
                     return
                     
 
     def potencia(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -233,10 +236,10 @@ class Interprete:
         else:
             self.ventana.procesador.acumulador = math.pow(float(self.ventana.procesador.acumulador),int(instruccion.split()[1]))
             self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            
             return
 
     def modulo(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -249,12 +252,12 @@ class Interprete:
                     if variable.valor!=0:
                         self.ventana.procesador.acumulador %= float(variable.valor)
                         self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                        
                     else:
                         raise ZeroDivisionError("¡No se puede dividir entre cero!")
                     return
 
     def concatene(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -266,10 +269,10 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador = str(self.ventana.procesador.acumulador) + str(variable.valor)
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
 
     def elimine(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -281,10 +284,10 @@ class Interprete:
                 if instruccion.split()[1] == variable.nombre:
                     self.ventana.procesador.acumulador = str(self.ventana.procesador.acumulador).replace(str(variable.valor),"")
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
 
     def extraiga(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -297,7 +300,6 @@ class Interprete:
             return
 
     def Y(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
@@ -322,10 +324,10 @@ class Interprete:
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
+                    
                     return
 
     def O(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 3:
@@ -350,9 +352,9 @@ class Interprete:
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
+                    
                     return
     def NO(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
@@ -375,10 +377,10 @@ class Interprete:
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
+                    
                     return
 
     def muestre(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -390,16 +392,17 @@ class Interprete:
                 text = self.ventana.display_pantalla.cget("text")
                 self.ventana.display_pantalla.config(text= text + "\nacumulador = " + str(self.ventana.procesador.acumulador))
                 self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                
                 return
             for variable in self.archivo.variables:
                 if instruccion.split()[1] == variable.nombre:
                     text = self.ventana.display_pantalla.cget("text")
                     self.ventana.display_pantalla.config(text= text + "\n" + str(variable.nombre) + " = " + str(variable.valor))
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
 
     def imprima(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -411,16 +414,17 @@ class Interprete:
                 text = self.ventana.display_impresora.cget("text")
                 self.ventana.display_impresora.config(text= text + "\nacumulador = " + str(self.ventana.procesador.acumulador))
                 self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                
                 return
             for variable in self.archivo.variables:
                 if instruccion.split()[1] == variable.nombre:
                     text = self.ventana.display_impresora.cget("text")
                     self.ventana.display_impresora.config(text= text + "\n" + str(variable.nombre) + " = " + str(variable.valor))
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
                     return
 
     def retorne(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != (1 or 0):
@@ -430,12 +434,12 @@ class Interprete:
             else:
                 return True , ""
         else:
-            self.termino = True
+            self.termino_ejecucion = True
             self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            
             
 
     def vaya(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:
@@ -445,11 +449,11 @@ class Interprete:
         else:
             for etiqueta in self.archivo.etiquetas:
                 if instruccion.split()[1] == etiqueta.nombre:
-                    self.i = etiqueta.apuntador
+                    self.i = etiqueta.apuntador -1
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                    
 
     def vayasi(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
@@ -458,17 +462,16 @@ class Interprete:
                 return True , ""
         else:
             for etiqueta in self.archivo.etiquetas:
-                print(etiqueta.nombre, " - ", etiqueta.apuntador)
                 if instruccion.split()[1] == etiqueta.nombre and self.ventana.procesador.acumulador > 0:
-                    self.i=etiqueta.apuntador
+                    self.i=etiqueta.apuntador -1
                 if instruccion.split()[2] == etiqueta.nombre and self.ventana.procesador.acumulador<0:
-                    self.i=etiqueta.apuntador
+                    self.i=etiqueta.apuntador -1
                 self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                
                 return
                     
 
     def etiqueta(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 2:
@@ -479,10 +482,10 @@ class Interprete:
                 return True , ""
         else:
             self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+            
             return
 
     def XXX(self,instruccion : str,is_test):
-        print(instruccion)
         if is_test == True:
             operandos = len(instruccion.split()) -1
             if operandos != 1:

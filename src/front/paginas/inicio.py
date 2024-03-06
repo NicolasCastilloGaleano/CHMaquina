@@ -2,8 +2,8 @@ import tkinter as tk
 import os
 from PIL import Image, ImageTk
 from tkinter import filedialog
-from back.componentes.procesador import Procesador
-from back.componentes.archivo import Archivo,Etiqueta,Variable
+from src.back.componentes.procesador import Procesador
+from src.back.componentes.archivo import Archivo,Etiqueta,Variable
 
 class Inicio(tk.Tk):
     def __init__(self, procesador:Procesador):
@@ -139,7 +139,7 @@ class Inicio(tk.Tk):
         self.etiquetas_listbox = tk.Listbox(self.etiquetas_frame)
         self.etiquetas_listbox.grid(row=1, column=0, sticky="NWES")
         # frame de visualizacion de pantalla
-        self.imagen_pantalla = self.cargar_imagen("front\img\pantalla.png", 650 , 500)
+        self.imagen_pantalla = self.cargar_imagen("src\\front\img\pantalla.png", 650 , 500)
         pantalla_frame = tk.Frame(self.contenido,background="blue", borderwidth=1, relief="solid")
         pantalla_frame.grid(column=1, columnspan=2,row=0, sticky="NWES")
         pantalla_frame.grid_propagate(False)
@@ -151,7 +151,7 @@ class Inicio(tk.Tk):
         self.display_pantalla.grid(column=0, row=0, sticky="NWES", padx=(30, 30), pady=(25, 25))
         self.display_pantalla.grid_propagate(False)
         # frame de visualizacion de impresora  
-        self.imagen_impresora = self.cargar_imagen("front\img\impresora.png", 580 , 280) 
+        self.imagen_impresora = self.cargar_imagen("src\\front\img\impresora.png", 580 , 280) 
         impresora_frame = tk.Frame(self.contenido,background="#B2B0B0", borderwidth=1, relief="solid")
         impresora_frame.grid(column=1, columnspan=2,row=1, sticky="NWES")  
         impresora_frame.grid_propagate(False)
@@ -278,5 +278,7 @@ class Inicio(tk.Tk):
             if valor:
                 ventana_leer_variable.destroy()
                 variable.valor = valor
+                return True
         boton_aceptar = tk.Button(ventana_leer_variable, text="Aceptar", command=aceptar)
         boton_aceptar.grid(column=0,row=1, columnspan=2,pady=5)
+        

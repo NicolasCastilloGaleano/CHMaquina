@@ -1,5 +1,5 @@
-from back.componentes.procesador import Procesador
-from front.componentes.tamaño_memoria import TamañoMemoria
+from src.back.componentes.procesador import Procesador
+from src.front.componentes.tamaño_memoria import TamañoMemoria
 
 class Main:
     def __init__(self):
