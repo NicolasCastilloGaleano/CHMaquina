@@ -13,21 +13,8 @@ class Procesador:
         self.archivos : list[Archivo] = []
         
     
-    def revisar_archivo(self, archivo) -> bool:
+    def revisar_archivo(self, archivo):
         return self.interprete.revisar_archivo(archivo)
         
     def ejecutar_archivo(self, ventana):
         return self.interprete.ejecutar_archivo(ventana)
-    
-    
-    
-    
-    
-    
-# p = Procesador()
-# revision = p.revisar_archivo('back/archivos/factorial.ch')
-# if revision[0]:
-#     p.memoria.guardar_en_memoria(revision[1])
-#     print(f"el archivo se guardo en memoria:\n{p.memoria.memoria}")
-# else:
-#     print(f"El archivo presenta errores en:\n{revision[1]}")

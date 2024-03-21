@@ -28,9 +28,6 @@ class Inicio(tk.Tk):
         # Menú Ejecutar
         self.menu_ejecutar = tk.Menu(barra_menus, tearoff=False)
         self.menu_ejecutar.add_command(label="Ejecutar", command=self.ejecutar)
-        self.menu_ejecutar.add_command(label="Mostrar Memoria", command=self.mostrar_memoria)
-        self.menu_ejecutar.add_command(label="Pausa", command=self.pausa)
-        self.menu_ejecutar.add_command(label="Paso a Paso", command=self.paso_a_paso)
         barra_menus.add_cascade(menu=self.menu_ejecutar, label="Ejecutar")
 
         # Asociar la barra de menús a la ventana
@@ -197,6 +194,9 @@ class Inicio(tk.Tk):
         self.archivos_listbox.yview(*args)    
         self.archivo_seleccionado_listbox.yview(*args)
         
+    def limpiar_impresora(self):
+        self.display_impresora.config(text="")
+        
     def actualizar_proceso(self, instruccion):
         self.acumulador_valor.config(text=str(self.procesador.acumulador))
         self.instruccion_valor.config(text=str(instruccion))
@@ -251,14 +251,6 @@ class Inicio(tk.Tk):
         self.menu_ejecutar.entryconfig("Ejecutar", state="normal")
         self.archivos_listbox.bind("<<ListboxSelect>>", self.seleccionar_archivo)
 
-    def mostrar_memoria(self):
-        print("Mostrando memoria...")
-
-    def pausa(self):
-        print("Pausa...")
-
-    def paso_a_paso(self):
-        print("Paso a paso...")
 
     def ventana_valor_variable(self, variable:Variable):
         ventana_leer_variable = tk.Toplevel()

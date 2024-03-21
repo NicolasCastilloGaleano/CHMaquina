@@ -11,8 +11,8 @@ lea n
 
 
 nueva respuesta R 0
-nueva resultado C Resultado=
-nueva intermedia R
+nueva resultado C 0
+nueva intermedia R 0
 
 
 cargue n
@@ -27,7 +27,7 @@ vayasi itere cero
 etiqueta itere 19
 etiqueta cero 36
 etiqueta fin 41
-//termine
+// termine
 muestre resultado
 muestre respuesta
 imprima resultado

@@ -1,13 +1,14 @@
 import os
 import time
 import math
+from tkinter import simpledialog
 
 class Interprete:
     def __init__(self) -> None:
         self.comandos = ["cargue","almacene","nueva","lea","sume","reste","multiplique","divida","potencia","modulo","concatene","elimine","extraiga","Y","O","NO","muestre","imprima","retorne","vaya","vayasi","etiqueta","XXX"]
         pass
     
-    def revisar_archivo(self, archivo) -> bool:
+    def revisar_archivo(self, archivo):
         _, extension = os.path.splitext(archivo)
         lineas = []
         errores = []
@@ -32,7 +33,7 @@ class Interprete:
             return False, errores
         return True, lineas
     
-    def revisar_instruccion(self,index,instruccion) -> bool:
+    def revisar_instruccion(self,index,instruccion):
         return self.opciones(index,instruccion,True)        
     
     def ejecutar_archivo(self, ventana):
@@ -45,7 +46,6 @@ class Interprete:
             while self.i < self.archivo.fin:
                 instruccion = self.ventana.procesador.memoria.memoria[self.i]
                 self.ejecutar_comando(instruccion)
-                time.sleep(1)
                 self.i+=1
                 if self.termino_ejecucion == True:
                     text = self.ventana.display_pantalla.cget("text")
@@ -57,13 +57,16 @@ class Interprete:
             self.ventana.display_pantalla.config(text= text + "\nError: " + str(mensaje))
     
     def ejecutar_comando(self,instruccion:str):
-        if instruccion.split()[0] in self.comandos:
-            idx_comando = self.comandos.index(instruccion.split()[0])
-            self.opciones(idx_comando,instruccion,False )
-        else:
-            self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
-            
-        self.ventana.update()
+        if len(instruccion.split())!=0:
+            if instruccion.split()[0] in self.comandos:
+                idx_comando = self.comandos.index(instruccion.split()[0])
+                print(instruccion)
+                self.opciones(idx_comando,instruccion,False )
+                time.sleep(1)
+            else:
+                self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
+                
+            self.ventana.update()
     
     def opciones(self,index, instruccion, is_test):
         switch = {
@@ -149,13 +152,11 @@ class Interprete:
         else:
             for variable in self.archivo.variables:
                 if instruccion.split()[1] == variable.nombre:
-                    self.termino_lectura = False
-                    self.termino_lectura = self.ventana.ventana_valor_variable(variable)
+                    variable.valor = simpledialog.askstring("Input", f"Ingresa el valor de {variable.nombre}:")
                     self.ventana.procesador.memoria.memoria[variable.posicion_valor] = variable.valor
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     self.ventana.actualizar_memoria()
                     self.ventana.actualizar_variables()
-                    
                     return
             
 
@@ -169,7 +170,7 @@ class Interprete:
         else:
             for variable in self.archivo.variables:
                 if instruccion.split()[1] == variable.nombre:
-                    self.ventana.procesador.acumulador += float(variable.valor)
+                    self.ventana.procesador.acumulador = float(self.ventana.procesador.acumulador) + float(variable.valor)
                     self.ventana.actualizar_proceso(f"{self.archivo.idx:04d} - " + instruccion)
                     
                     return
